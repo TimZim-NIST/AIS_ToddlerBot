@@ -7,9 +7,11 @@
 ''              robot. Use the subroutines provided to command the
 ''              robot to walk around.
 ''
-'' Derived from the Parallax Sample Program:
+'' Derived from the Parallax Sample Program(s):
 ''   Toddler Program 2.4: First Steps Forward with State Transitions
+''   Toddler Program 3.1: Turning
 '' Comments were expanded to provide a better understanding of the
+'' program operation for the students.
 ''
 '' Solution Comments:
 ''   It is suggested that a simple track be created on the floor
@@ -17,13 +19,12 @@
 ''   the robot to walk within the track. Simple turns should be
 ''   created that are within the bounds of the robot operation.
 ''   This code contains a simple walking example that can be used
-''   to outline the walking track to guarantee it fits within the
-''   capabilities of the robot and code. Have the students write
-''   their code and raise their hands when complete, program the
-''   robots at their computer with a USB cable, and test it on
+''   to outline the walking track to guarantee it will fit within
+''   the capabilities of the robot and code. Have the students
+''   write their code and raise their hands when complete, program
+''   the robots at their computer with a USB cable, and test it on
 ''   the track. Repeat.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
 ' {$STAMP BS2}
 ' {$PBASIC 2.5}
 
@@ -109,6 +110,24 @@ FinishForward   DATA    TR, SC, TC, xx
 '' This is where your code goes! Make sure you put your code between
 '' the "Main_Program:" and END commands, and keep the "ResetCC" to
 '' make sure the robot stands up straight before walking.
+''
+'' To call a move, you can write:
+''
+''       Mx = WalkForward
+''       GOSUB Movement
+''
+'' This tells the robot to set the next movement to the type
+'' "WalkForward", and to perform that movement using the subroutine.
+'' You can replace the WalkForward constant with any of the ones
+'' provided by the program. At the time of this writing, those
+'' constants include:
+''       * WalkForward
+''       * WalkBackward
+''       * TurnLeft
+''       * TurnRight
+''       * PivotLeft
+''       * PivotRight
+''       * FinishForward
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Main_Program:
   GOSUB ResetCC               ' Reset the legs to the standing position
