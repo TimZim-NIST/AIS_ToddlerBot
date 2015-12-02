@@ -1,0 +1,247 @@
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' Name:        Toddler Bot Simple Walking for Adventures in Science
+'' Date:        11/25/2015
+'' Author:      Timothy Zimmerman
+'' Description: Provides the structure and subroutines to perform
+''              simple walking and turning of the Parallax Toddler
+''              robot. Use the subroutines provided to command the
+''              robot to walk around.
+''
+'' Derived from the Parallax Sample Program(s):
+''   Toddler Program 2.4: First Steps Forward with State Transitions
+''   Toddler Program 3.1: Turning
+'' Comments were expanded to provide a better understanding of the
+'' program operation for the students.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+' {$STAMP BS2}
+' {$PBASIC 2.5}
+
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' I/O DEFINITIONS (Input/Output)
+'' ------------------------------
+'' This section sets the constants (CON) that inform the Basic Stamp
+'' where the servos are plugged in. In this case, the tilt servo is
+'' attached to "Pin 13", and the stride servo is attached to "Pin 13".
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+TiltServo       CON     13                      ' Tilt servo on P12
+StrideServo     CON     12                      ' Stride servo on P13
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' PROGRAM CONSTANTS
+'' -----------------
+'' This section sets the constants (CON) that store important numbers
+'' the program uses during its execution.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+MoveDelay       CON     12                      ' in milliseconds
+StrideStep      CON     5                       ' StrideServo step size
+TiltStep        CON     5                       ' TiltServo step size
+
+RightTilt       CON     620                     ' Tilt limits
+CenterTilt      CON     750
+LeftTilt        CON     880
+
+RightStride     CON     650                     ' Stride limits
+CenterStride    CON     750
+LeftStride      CON     850
+
+TL              CON     0                       ' States machine offsets
+TC              CON     1
+TR              CON     2
+SL              CON     3
+SC              CON     4
+SR              CON     5
+xx              CON     255
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' PROGRAM VARIABLES
+'' -----------------
+'' This section allocates variables (VAR) to store numbers that are
+'' read-from and written-to by the program during its execution.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+MoveLoop        VAR     Nib                     ' Loop for repeat movements
+Pulses          VAR     Word                    ' Pulse variable
+
+CurrentTilt     VAR     Word
+CurrentStride   VAR     Word
+NewValue        VAR     Word
+
+Dx              VAR     Pulses
+Mx              VAR     Word
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' WALKING STATES
+'' --------------
+'' The lists below describe the sequence of operations required by the
+'' robot to perform a specific movement. For example, to step forward,
+'' the robot must first tilt right (TR), then stride left (SL), tilt
+'' left (TL), and stride right (SR). In order to store the list in the
+'' electronically-eraseable programmable read-only memory (EEPROM),
+'' we must use the DATA command.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+WalkForward     DATA    TR, SL, TL, SR, xx
+WalkBackward    DATA    TR, SR, TL, SL, xx
+TurnLeft        DATA    TL, SR, TC, SL, xx
+TurnRight       DATA    TR, SL, TC, SR, xx
+PivotLeft       DATA    TL, SR, TC, SL, TR, SL, TL, SR, xx
+PivotRight      DATA    TR, SL, TC, SR, TL, SL, TC, SR, xx
+FinishForward   DATA    TR, SC, TC, xx
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' MAIN PROGRAM
+'' ------------
+'' This is where your code goes! Make sure you put your code between
+'' the "Main_Program:" and END commands, and keep the "ResetCC" to
+'' make sure the robot stands up straight before walking.
+''
+'' To call a move, you can write:
+''
+''       Mx = WalkForward
+''       GOSUB Movement
+''
+'' This tells the robot to set the next movement to the type
+'' "WalkForward", and to perform that movement using the subroutine.
+'' You can replace the WalkForward constant with any of the ones
+'' provided by the program. At the time of this writing, those
+'' constants include:
+''       * WalkForward
+''       * WalkBackward
+''       * TurnLeft
+''       * TurnRight
+''       * PivotLeft
+''       * PivotRight
+''       * FinishForward
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Main_Program:
+  GOSUB ResetCC               ' Reset the legs to the standing position
+
+
+  ''''''''''''''''''''''''''''''''''''''''
+  '' ****** Your code goes here! ****** ''
+  ''''''''''''''''''''''''''''''''''''''''
+
+
+  Mx = FinishForward          ' Reset the legs to the standing position
+  GOSUB Movement
+END
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' SUBROUTINES
+'' ------------
+'' The remaining code below holds all of the subroutines that are
+'' needed for the robot to walk. These allow the MAIN PROGRAM code to
+'' be "abstracted". Abstraction allows us to create human-readable code
+'' that is actually performing operations in ones and zeros at the
+'' machine-level.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' MOVEMENT
+'' --------
+'' Handles the requested action state transitions. The subroutine will
+'' return when it has completed each required step to complete the
+'' operation. Mx contains the TABLE INDEX, and must be set BEFORE the
+'' subroutine is called. An 'xx' value marks the end of the operation.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Movement:
+  READ Mx, Dx                                   ' read next action
+  Mx = Mx + 1
+  IF Dx = xx THEN MovementDone                  ' skip if end of list
+  GOSUB DoMovement                              ' execute movement
+  GOTO Movement                                 ' loop until done
+DoMovement:
+  ' Branch to the specific movement routine depending on
+  ' the current value of the Dx variable.
+  BRANCH Dx,[TiltLeft,TiltCenter,TiltRight,StrideLeft,StrideCenter,StrideRight]
+MovementDone:
+  RETURN
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' MOVEMENT SETUP ROUTINES
+'' -----------------------
+'' Prepares the generic movement routine (MovementTilt or MovementStride)
+'' to perform the requested action.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+TiltLeft:
+  NewValue = LeftTilt
+  GOTO MovementTilt
+
+TiltCenter:
+  NewValue = CenterTilt
+  GOTO MovementTilt
+
+TiltRight:
+  NewValue = RightTilt
+  GOTO MovementTilt
+
+StrideLeft:
+  NewValue = LeftStride
+  GOTO MovementStride
+
+StrideCenter:
+  NewValue = CenterStride
+  GOTO MovementStride
+
+StrideRight:
+  NewValue = RightStride
+  GOTO MovementStride
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' MOVEMENT ROUTINES
+'' -----------------
+'' Lowest-level code! Actually performs the movement of the servo to
+'' the specific position required by the current action. The NewValue
+'' variable set by the movement setup routine informs the tilt and
+'' stride routine which position the servo needs to move to.
+''
+'' NOTE: If a servo is not receiving a pulse from the Basic Stamp, it
+''       will not hold its current position. This can cause the robot
+''       to move in unexpected ways. To resolve this, the servo that
+''       is not currently being commanded to move is instead sent the
+''       pulse for its current position, causing it to stiffen up and
+''       hold its position until the other servo has stopped.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+MovementTilt:
+  FOR Pulses = CurrentTilt TO NewValue STEP TiltStep
+    PULSOUT TiltServo,   Pulses
+    PULSOUT StrideServo, CurrentStride
+    PAUSE MoveDelay
+  NEXT
+  CurrentTilt = NewValue
+  RETURN
+
+MovementStride:
+  FOR Pulses = CurrentStride TO NewValue STEP StrideStep
+    PULSOUT TiltServo,   CurrentTilt
+    PULSOUT StrideServo, Pulses
+    PAUSE MoveDelay
+  NEXT
+  CurrentStride = NewValue
+  RETURN
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'' RESET ROUTINE
+'' -------------
+'' This is a "helper" routine that allows us to simply command the
+'' servos to go to the "standing" position (both legs centered, and
+'' both feet flat. It also resets the state variables.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+ResetCC:
+  CurrentTilt   = CenterTilt
+  CurrentStride = CenterStride
+  FOR Pulses = 1 TO 100 STEP StrideStep
+    PULSOUT TiltServo, CenterTilt
+    PULSOUT StrideServo, CenterStride
+    PAUSE MoveDelay
+  NEXT
+  RETURN
