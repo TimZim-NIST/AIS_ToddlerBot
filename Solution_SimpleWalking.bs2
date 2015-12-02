@@ -132,7 +132,17 @@ FinishForward   DATA    TR, SC, TC, xx
 Main_Program:
   GOSUB ResetCC               ' Reset the legs to the standing position
 
-    FOR MoveLoop = 1 TO 3     ' Walk forward for THREE cycles
+    FOR MoveLoop = 1 TO 4     ' Walk forward for FOUR cycles
+      Mx = WalkForward
+      GOSUB Movement
+    NEXT
+
+    FOR MoveLoop = 1 TO 2     ' Turn right for TWO cycles
+      Mx = TurnRight
+      GOSUB Movement
+    NEXT
+
+    FOR MoveLoop = 1 TO 4     ' Walk forward for FOUR cycles
       Mx = WalkForward
       GOSUB Movement
     NEXT
@@ -142,8 +152,8 @@ Main_Program:
       GOSUB Movement
     NEXT
 
-    FOR MoveLoop = 1 TO 3     ' Walk backward for THREE cycles
-      Mx = WalkBackward
+    FOR MoveLoop = 1 TO 4     ' Walk forward for FOUR cycles
+      Mx = WalkForward
       GOSUB Movement
     NEXT
 
