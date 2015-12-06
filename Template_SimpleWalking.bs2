@@ -22,11 +22,11 @@
 '' I/O DEFINITIONS (Input/Output)
 '' ------------------------------
 '' This section sets the constants (CON) that inform the Basic Stamp
-'' where the servos are plugged in. In this case, the tilt servo is
-'' attached to "Pin 13", and the stride servo is attached to "Pin 13".
+'' where the servos are plugged in. In this case, the stride servo is
+'' attached to "Pin 12", and the tilt servo is attached to "Pin 13".
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-TiltServo       CON     13                      ' Tilt servo on P12
-StrideServo     CON     12                      ' Stride servo on P13
+StrideServo     CON     12                      ' Stride servo on P12
+TiltServo       CON     13                      ' Tilt servo on P13
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -121,9 +121,10 @@ Main_Program:
   GOSUB ResetCC               ' Reset the legs to the standing position
 
 
-  ''''''''''''''''''''''''''''''''''''''''
-  '' ****** Your code goes here! ****** ''
-  ''''''''''''''''''''''''''''''''''''''''
+  FOR MoveLoop = 1 TO 4
+    Mx = WalkForward
+    GOSUB Movement
+  NEXT
 
 
   Mx = FinishForward          ' Reset the legs to the standing position
@@ -144,10 +145,11 @@ END
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '' MOVEMENT
 '' --------
-'' Handles the requested action state transitions. The subroutine will
-'' return when it has completed each required step to complete the
-'' operation. Mx contains the TABLE INDEX, and must be set BEFORE the
-'' subroutine is called. An 'xx' value marks the end of the operation.
+'' Handles the requested-action state transitions. The subroutine will
+'' return when it has finished each required step to complete the
+'' movement. Mx contains the memory location walking state as it
+'' resides in EEPROM, AND must be set BEFORE the subroutine is called.
+'' An 'xx' value marks the end of the operation.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 Movement:
   READ Mx, Dx                                   ' read next action
@@ -166,8 +168,8 @@ MovementDone:
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '' MOVEMENT SETUP ROUTINES
 '' -----------------------
-'' Prepares the generic movement routine (MovementTilt or MovementStride)
-'' to perform the requested action.
+'' Prepares and calls the generic movement routine (either MovementTilt
+'' or MovementStride) to perform the requested action.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 TiltLeft:
@@ -204,11 +206,11 @@ StrideRight:
 '' stride routine which position the servo needs to move to.
 ''
 '' NOTE: If a servo is not receiving a pulse from the Basic Stamp, it
-''       will not hold its current position. This can cause the robot
+''       will not hold its current position. This can cause a servo
 ''       to move in unexpected ways. To resolve this, the servo that
-''       is not currently being commanded to move is instead sent the
+''       is not currently being commanded to move is instead sent a
 ''       pulse for its current position, causing it to stiffen up and
-''       hold its position until the other servo has stopped.
+''       hold its position until the other servo has finished.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 MovementTilt:
   FOR Pulses = CurrentTilt TO NewValue STEP TiltStep
@@ -232,9 +234,9 @@ MovementStride:
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 '' RESET ROUTINE
 '' -------------
-'' This is a "helper" routine that allows us to simply command the
+'' This is a helper subroutine that allows us to simply command the
 '' servos to go to the "standing" position (both legs centered, and
-'' both feet flat. It also resets the state variables.
+'' both feet flat). It also resets the state variables.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 ResetCC:
   CurrentTilt   = CenterTilt
